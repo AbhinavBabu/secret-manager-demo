@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — Secure Document Portal{% endblock %}
+
+{% block page_title %}
+<div class="page-title-content">
+  <h4 class="mb-0"><i class="bi bi-grid-fill me-2 text-accent"></i>Dashboard</h4>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-0">
+      <li class="breadcrumb-item active">Overview</li>
+    </ol>
+  </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── Welcome banner ────────────────────────────────────────────────────────── -->
+<div class="welcome-banner">
+  <div class="welcome-text">
+    <h5 class="mb-1">Good day, {{ current_user.split('@')[0].title() }} 👋</h5>
+    <p class="mb-0 opacity-75">Here's an overview of your document portal activity.</p>
+  </div>
+  <div class="welcome-actions">
+    <a href="{{ url_for('documents.upload') }}" class="btn btn-upload-primary">
+      <i class="bi bi-cloud-arrow-up-fill me-2"></i>Upload Document
+    </a>
+  </div>
+</div>
+
+<!-- ── Stats cards row ────────────────────────────────────────────────────────── -->
+<div class="row g-4 mb-4">
+
+  <!-- Total Documents -->
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="stat-card stat-card-blue" data-aos="fade-up" data-aos-delay="0">
+      <div class="stat-card-body">
+        <div class="stat-icon-wrap stat-blue">
+          <i class="bi bi-file-earmark-fill"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Total Documents</span>
+          <span class="stat-value" data-count="{{ total_docs }}">{{ total_docs }}</span>
+        </div>
+      </div>
+      <div class="stat-footer">
+        <i class="bi bi-folder2-open me-1"></i> All time
+      </div>
+    </div>
+  </div>
+
+  <!-- Total Storage -->
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="stat-card stat-card-purple" data-aos="fade-up" data-aos-delay="50">
+      <div class="stat-card-body">
+        <div class="stat-icon-wrap stat-purple">
+          <i class="bi bi-hdd-fill"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Storage Used</span>
+          <span class="stat-value">{{ total_storage }}</span>
+        </div>
+      </div>
+      <div class="stat-footer">
+        <i class="bi bi-cloud-fill me-1"></i> Amazon S3
+      </div>
+    </div>
+  </div>
+
+  <!-- Encryption Status -->
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="stat-card stat-card-green" data-aos="fade-up" data-aos-delay="100">
+      <div class="stat-card-body">
+        <div class="stat-icon-wrap stat-green">
+          <i class="bi bi-shield-lock-fill"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Encryption</span>
+          <span class="stat-value">Active</span>
+        </div>
+      </div>
+      <div class="stat-footer">
+        <i class="bi bi-lock-fill me-1"></i> AWS KMS (CMK)
+      </div>
+    </div>
+  </div>
+
+  <!-- Secrets Status -->
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="stat-card stat-card-orange" data-aos="fade-up" data-aos-delay="150">
+      <div class="stat-card-body">
+        <div class="stat-icon-wrap stat-orange">
+          <i class="bi bi-key-fill"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Secrets Manager</span>
+          <span class="stat-value">Secured</span>
+        </div>
+      </div>
+      <div class="stat-footer">
+        <i class="bi bi-check-circle-fill me-1"></i> 10 secrets loaded
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── AWS Architecture strip ─────────────────────────────────────────────────── -->
+<div class="aws-arch-strip mb-4">
+  <div class="arch-label">Live AWS Integration</div>
+  <div class="arch-services">
+    <div class="arch-service active">
+      <i class="bi bi-shield-lock-fill"></i>
+      <span>Secrets Manager</span>
+      <div class="arch-status-dot"></div>
+    </div>
+    <div class="arch-arrow"><i class="bi bi-arrow-right"></i></div>
+    <div class="arch-service active">
+      <i class="bi bi-person-badge-fill"></i>
+      <span>JWT Auth</span>
+      <div class="arch-status-dot"></div>
+    </div>
+    <div class="arch-arrow"><i class="bi bi-arrow-right"></i></div>
+    <div class="arch-service active">
+      <i class="bi bi-cloud-upload-fill"></i>
+      <span>S3 Upload</span>
+      <div class="arch-status-dot"></div>
+    </div>
+    <div class="arch-arrow"><i class="bi bi-arrow-right"></i></div>
+    <div class="arch-service active">
+      <i class="bi bi-lock-fill"></i>
+      <span>KMS Encrypt</span>
+      <div class="arch-status-dot"></div>
+    </div>
+    <div class="arch-arrow"><i class="bi bi-arrow-right"></i></div>
+    <div class="arch-service active">
+      <i class="bi bi-envelope-fill"></i>
+      <span>SMTP Notify</span>
+      <div class="arch-status-dot"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Recent uploads table ───────────────────────────────────────────────────── -->
+<div class="card-panel">
+  <div class="card-panel-header">
+    <div>
+      <h6 class="card-panel-title"><i class="bi bi-clock-history me-2"></i>Recent Uploads</h6>
+      <p class="card-panel-sub mb-0">Last 5 documents uploaded to the portal</p>
+    </div>
+    <a href="{{ url_for('documents.all_documents') }}" class="btn btn-outline-primary btn-sm">
+      View All <i class="bi bi-arrow-right ms-1"></i>
+    </a>
+  </div>
+
+  {% if recent_docs %}
+  <div class="table-responsive">
+    <table class="table portal-table mb-0">
+      <thead>
+        <tr>
+          <th>Document Name</th>
+          <th>Uploaded By</th>
+          <th>Upload Date</th>
+          <th>File Size</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for doc in recent_docs %}
+        <tr>
+          <td>
+            <div class="doc-name-cell">
+              <div class="doc-icon"><i class="bi bi-file-earmark-pdf-fill"></i></div>
+              <span class="doc-name-text">{{ doc.original_name }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="uploader-badge">
+              <i class="bi bi-person-circle me-1"></i>{{ doc.get('uploader', '—') }}
+            </span>
+          </td>
+          <td>
+            <span class="date-text">{{ doc.get('date_display', '—') }}</span>
+          </td>
+          <td>
+            <span class="size-badge">{{ doc.get('size_display', '—') }}</span>
+          </td>
+          <td>
+            <a href="{{ url_for('documents.download', doc_id=doc['_id']) }}"
+               class="btn btn-download btn-sm"
+               title="Download (pre-signed URL, 15 min)">
+              <i class="bi bi-download me-1"></i>Download
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="bi bi-inbox empty-state-icon"></i>
+    <h6>No documents yet</h6>
+    <p>Start by <a href="{{ url_for('documents.upload') }}">uploading your first document</a>.</p>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}

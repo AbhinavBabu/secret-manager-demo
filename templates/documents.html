@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Documents — Secure Document Portal{% endblock %}
+
+{% block page_title %}
+<div class="page-title-content">
+  <h4 class="mb-0"><i class="bi bi-folder2-open me-2 text-accent"></i>All Documents</h4>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-0">
+      <li class="breadcrumb-item"><a href="{{ url_for('documents.dashboard') }}">Dashboard</a></li>
+      <li class="breadcrumb-item active">Documents</li>
+    </ol>
+  </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── Toolbar ─────────────────────────────────────────────────────────────────── -->
+<div class="docs-toolbar mb-4">
+  <!-- Search form -->
+  <form method="GET" action="{{ url_for('documents.all_documents') }}"
+        class="search-form" id="searchForm">
+    <div class="search-input-wrap">
+      <i class="bi bi-search search-icon"></i>
+      <input
+        type="text"
+        name="search"
+        id="searchInput"
+        class="search-input"
+        placeholder="Search documents by name…"
+        value="{{ search }}"
+        autocomplete="off"
+      >
+      {% if search %}
+      <a href="{{ url_for('documents.all_documents') }}" class="search-clear" title="Clear search">
+        <i class="bi bi-x-circle-fill"></i>
+      </a>
+      {% endif %}
+    </div>
+    <button type="submit" class="btn btn-search">
+      <i class="bi bi-search me-1"></i>Search
+    </button>
+  </form>
+
+  <!-- Right actions -->
+  <div class="docs-toolbar-right">
+    <span class="doc-count-badge">
+      <i class="bi bi-file-earmark-fill me-1"></i>
+      {{ docs|length }} document{{ 's' if docs|length != 1 else '' }}
+      {% if search %} matching "{{ search }}"{% endif %}
+    </span>
+    <a href="{{ url_for('documents.upload') }}" class="btn btn-upload-primary btn-sm">
+      <i class="bi bi-cloud-arrow-up-fill me-1"></i>Upload New
+    </a>
+  </div>
+</div>
+
+<!-- ── Documents table ────────────────────────────────────────────────────────── -->
+<div class="card-panel">
+  {% if docs %}
+  <div class="table-responsive">
+    <table class="table portal-table mb-0" id="documentsTable">
+      <thead>
+        <tr>
+          <th class="sortable" data-col="0">
+            Document Name <i class="bi bi-arrow-down-up ms-1 sort-icon"></i>
+          </th>
+          <th class="sortable" data-col="1">
+            Uploader <i class="bi bi-arrow-down-up ms-1 sort-icon"></i>
+          </th>
+          <th class="sortable" data-col="2">
+            Upload Date <i class="bi bi-arrow-down-up ms-1 sort-icon"></i>
+          </th>
+          <th class="sortable" data-col="3">
+            File Size <i class="bi bi-arrow-down-up ms-1 sort-icon"></i>
+          </th>
+          <th>Description</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for doc in docs %}
+        <tr class="doc-row" data-doc-id="{{ doc['_id'] }}">
+
+          <!-- Document name -->
+          <td>
+            <div class="doc-name-cell">
+              <div class="doc-icon">
+                <i class="bi bi-file-earmark-pdf-fill"></i>
+              </div>
+              <div>
+                <span class="doc-name-text">{{ doc.original_name }}</span>
+                <div class="doc-id-sub">ID: {{ doc['_id'][:12] }}…</div>
+              </div>
+            </div>
+          </td>
+
+          <!-- Uploader -->
+          <td>
+            <span class="uploader-badge">
+              <i class="bi bi-person-circle me-1"></i>{{ doc.get('uploader', '—') }}
+            </span>
+          </td>
+
+          <!-- Upload date -->
+          <td>
+            <span class="date-text">{{ doc.get('date_display', '—') }}</span>
+          </td>
+
+          <!-- File size -->
+          <td>
+            <span class="size-badge">{{ doc.get('size_display', '—') }}</span>
+          </td>
+
+          <!-- Description -->
+          <td>
+            <span class="desc-text" title="{{ doc.get('description', '') }}">
+              {{ doc.get('description', '—')[:60] }}{% if doc.get('description', '')|length > 60 %}…{% endif %}
+            </span>
+          </td>
+
+          <!-- Action -->
+          <td>
+            <div class="action-cell">
+              <a href="{{ url_for('documents.download', doc_id=doc['_id']) }}"
+                 class="btn btn-download btn-sm"
+                 title="Secure download via pre-signed S3 URL (expires 15 min)">
+                <i class="bi bi-download me-1"></i>Download
+              </a>
+              <div class="secure-badge-small" title="KMS Encrypted in S3">
+                <i class="bi bi-lock-fill"></i>
+              </div>
+            </div>
+          </td>
+
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Table footer info -->
+  <div class="table-footer">
+    <span class="table-footer-info">
+      <i class="bi bi-lock-fill text-success me-1"></i>
+      All documents encrypted with <strong>KMS CMK</strong> &bull;
+      Downloads via <strong>pre-signed S3 URLs</strong> (15-min expiry)
+    </span>
+  </div>
+
+  {% else %}
+  <!-- Empty state -->
+  <div class="empty-state py-5">
+    {% if search %}
+    <i class="bi bi-search empty-state-icon"></i>
+    <h6>No documents match "{{ search }}"</h6>
+    <p>Try a different search term or
+      <a href="{{ url_for('documents.all_documents') }}">view all documents</a>.
+    </p>
+    {% else %}
+    <i class="bi bi-inbox empty-state-icon"></i>
+    <h6>No documents uploaded yet</h6>
+    <p>
+      <a href="{{ url_for('documents.upload') }}" class="btn btn-upload-primary btn-sm mt-2">
+        <i class="bi bi-cloud-arrow-up-fill me-1"></i>Upload your first document
+      </a>
+    </p>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<!-- ── Pagination placeholder (ready for future backend pagination) ─────────────────── -->
+{% if docs|length > 20 %}
+<div class="d-flex justify-content-center mt-4">
+  <nav aria-label="Document pagination">
+    <ul class="pagination portal-pagination">
+      <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+      <li class="page-item active"><a class="page-link" href="#">1</a></li>
+      <li class="page-item disabled"><a class="page-link" href="#">Next</a></li>
+    </ul>
+  </nav>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => initDocumentsPage());
+</script>
+{% endblock %}

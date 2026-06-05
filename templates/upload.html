@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Document — Secure Document Portal{% endblock %}
+
+{% block page_title %}
+<div class="page-title-content">
+  <h4 class="mb-0"><i class="bi bi-cloud-arrow-up-fill me-2 text-accent"></i>Upload Document</h4>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb mb-0">
+      <li class="breadcrumb-item"><a href="{{ url_for('documents.dashboard') }}">Dashboard</a></li>
+      <li class="breadcrumb-item active">Upload</li>
+    </ol>
+  </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+  <div class="col-12 col-xl-9">
+
+    <!-- Upload info banner -->
+    <div class="upload-info-banner mb-4">
+      <div class="upload-info-items">
+        <div class="upload-info-item">
+          <i class="bi bi-lock-fill text-success"></i>
+          <span>Encrypted with <strong>Customer-managed KMS key</strong></span>
+        </div>
+        <div class="upload-info-divider"></div>
+        <div class="upload-info-item">
+          <i class="bi bi-cloud-fill text-primary"></i>
+          <span>Stored in <strong>Amazon S3</strong></span>
+        </div>
+        <div class="upload-info-divider"></div>
+        <div class="upload-info-item">
+          <i class="bi bi-envelope-fill text-warning"></i>
+          <span><strong>Admin notified</strong> via email</span>
+        </div>
+        <div class="upload-info-divider"></div>
+        <div class="upload-info-item">
+          <i class="bi bi-file-earmark-pdf text-danger"></i>
+          <span>PDF only &bull; Max <strong>20 MB</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upload form card -->
+    <div class="card-panel">
+      <div class="card-panel-header">
+        <div>
+          <h6 class="card-panel-title"><i class="bi bi-cloud-arrow-up-fill me-2"></i>Upload New Document</h6>
+          <p class="card-panel-sub mb-0">Select a PDF file to securely upload to the portal</p>
+        </div>
+      </div>
+
+      <div class="card-panel-body">
+        <form method="POST" action="{{ url_for('documents.upload_post') }}"
+              enctype="multipart/form-data" id="uploadForm" novalidate>
+
+          <!-- Drag-and-drop zone -->
+          <div class="drop-zone" id="dropZone" role="button" tabindex="0"
+               aria-label="Click or drag a PDF file here to upload">
+            <div class="drop-zone-inner" id="dropZoneContent">
+              <div class="drop-icon">
+                <i class="bi bi-cloud-arrow-up-fill" id="dropIcon"></i>
+              </div>
+              <h5 class="drop-title" id="dropTitle">Drag &amp; Drop your PDF here</h5>
+              <p class="drop-sub" id="dropSub">or click to browse files from your computer</p>
+              <div class="drop-hint">
+                <i class="bi bi-file-earmark-pdf me-1"></i> PDF only &bull;
+                <i class="bi bi-hdd me-1 ms-2"></i> Max 20 MB
+              </div>
+              <input type="file" id="documentInput" name="document" accept=".pdf,application/pdf"
+                     class="drop-input" required>
+            </div>
+
+            <!-- File selected state (hidden initially) -->
+            <div class="drop-zone-selected d-none" id="dropZoneSelected">
+              <div class="selected-file-icon">
+                <i class="bi bi-file-earmark-pdf-fill"></i>
+              </div>
+              <div class="selected-file-info">
+                <span class="selected-file-name" id="selectedFileName">document.pdf</span>
+                <span class="selected-file-size" id="selectedFileSize">0 KB</span>
+              </div>
+              <button type="button" class="btn-clear-file" id="clearFile" title="Remove file">
+                <i class="bi bi-x-circle-fill"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Description field -->
+          <div class="form-group-custom mt-4">
+            <label for="description" class="form-label-custom">
+              Description <span class="optional-label">(optional)</span>
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              class="form-control-custom form-textarea"
+              placeholder="Enter a brief description of this document (e.g. Q3 2024 Training Certificate)"
+              rows="3"
+              maxlength="500"
+            ></textarea>
+            <div class="char-counter">
+              <span id="charCount">0</span>/500 characters
+            </div>
+          </div>
+
+          <!-- Upload progress bar (hidden initially) -->
+          <div class="upload-progress-wrap d-none mt-4" id="uploadProgressWrap">
+            <div class="upload-progress-label">
+              <span>Uploading to Amazon S3…</span>
+              <span id="uploadProgressPct">0%</span>
+            </div>
+            <div class="progress upload-progress">
+              <div class="progress-bar progress-bar-animated" id="uploadProgressBar"
+                   role="progressbar" style="width: 0%"></div>
+            </div>
+            <div class="upload-progress-steps" id="uploadProgressSteps">
+              <span class="progress-step active" id="step1">
+                <i class="bi bi-cloud-arrow-up me-1"></i>Uploading to S3
+              </span>
+              <span class="progress-step" id="step2">
+                <i class="bi bi-database me-1"></i>Saving metadata
+              </span>
+              <span class="progress-step" id="step3">
+                <i class="bi bi-envelope me-1"></i>Notifying admin
+              </span>
+            </div>
+          </div>
+
+          <!-- Submit -->
+          <div class="d-flex gap-3 mt-4">
+            <button type="submit" class="btn btn-upload-primary px-5" id="uploadBtn" disabled>
+              <i class="bi bi-cloud-arrow-up-fill me-2"></i>Upload Document
+            </button>
+            <a href="{{ url_for('documents.dashboard') }}" class="btn btn-outline-secondary px-4">
+              <i class="bi bi-arrow-left me-2"></i>Cancel
+            </a>
+          </div>
+
+        </form>
+      </div>
+    </div>
+
+    <!-- Security details card -->
+    <div class="card-panel mt-4">
+      <div class="card-panel-header">
+        <h6 class="card-panel-title mb-0">
+          <i class="bi bi-shield-lock-fill me-2 text-success"></i>Security Details
+        </h6>
+      </div>
+      <div class="card-panel-body">
+        <div class="security-details-grid">
+          <div class="security-detail-item">
+            <div class="security-detail-icon text-warning"><i class="bi bi-key-fill"></i></div>
+            <div>
+              <strong>Secrets Retrieval</strong>
+              <p>Bucket name, KMS key ARN, SMTP credentials, and admin email are all retrieved dynamically from <code>AWS Secrets Manager</code> at runtime. No credentials exist in source code.</p>
+            </div>
+          </div>
+          <div class="security-detail-item">
+            <div class="security-detail-icon text-success"><i class="bi bi-lock-fill"></i></div>
+            <div>
+              <strong>At-rest Encryption</strong>
+              <p>Every uploaded object is encrypted with your <code>Customer-Managed KMS Key (CMK)</code> via <code>SSEKMSKeyId</code> before being written to S3.</p>
+            </div>
+          </div>
+          <div class="security-detail-item">
+            <div class="security-detail-icon text-primary"><i class="bi bi-link-45deg"></i></div>
+            <div>
+              <strong>Secure Downloads</strong>
+              <p>Files are never publicly accessible. Downloads use <code>pre-signed S3 URLs</code> with a 15-minute expiry generated on-demand by the backend.</p>
+            </div>
+          </div>
+          <div class="security-detail-item">
+            <div class="security-detail-icon text-info"><i class="bi bi-person-badge-fill"></i></div>
+            <div>
+              <strong>IAM Instance Role</strong>
+              <p>The EC2 instance uses an <code>IAM Instance Role</code> with scoped permissions. No AWS Access Keys are stored on the instance or in code.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Initialise the upload page interactions
+  document.addEventListener('DOMContentLoaded', () => initUploadPage());
+</script>
+{% endblock %}

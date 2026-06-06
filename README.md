@@ -1,4 +1,4 @@
-# Secure Employee Document Portal
+# DocPortal - Secure Employee Document Portal
 
 > A production-grade, cloud-native Flask web application demonstrating
 > real-world **AWS Secrets Manager** usage for secure employee document management.
